@@ -1,0 +1,26 @@
+{
+  "name": "POS Finance ERP Ultimate",
+  "short_name": "POS ERP",
+  "description": "Professional POS Finance ERP Progressive Web App",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef2ff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "lang": "bn",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
