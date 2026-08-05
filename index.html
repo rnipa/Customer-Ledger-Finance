@@ -1,6 +1,7 @@
-<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="bn"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Customer Ledger v3.3</title>
+<title>Customer Ledger v3.4 Fixed</title>
 <style>
 body{
 font-family:Arial,sans-serif;
@@ -51,8 +52,9 @@ button{background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;border:none
 </div>
 <div class="card"><h3>📒 Ledger Statement</h3><div id="his"></div></div>
 <script>
-let db=JSON.parse(localStorage.getItem("ledger_v2")||"[]"),cur=null;
-const save=()=>localStorage.setItem("ledger_v2",JSON.stringify(db));
+const STORAGE_KEY="customer_ledger_v34";
+let db=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]"),cur=null;
+const save=()=>localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
 
 function updateStats(){
  totalCustomers.textContent=db.length;
@@ -69,8 +71,11 @@ if(document.getElementById("totalCommission"))
 
 function add(){
  if(!n.value.trim()) return alert("নাম দিন");
+ if(m.value.trim() && !/^01\d{9}$/.test(m.value.trim())){
+   return alert("সঠিক মোবাইল নম্বর লিখুন");
+ }
  if(db.some(x=>x.mobile===m.value.trim()&&m.value.trim()!=="")) return alert("এই মোবাইল নম্বর আগে থেকেই আছে");
- db.push({id:Date.now(),name:n.value.trim(),mobile:m.value.trim(),balance:0,tx:[]});
+ db.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString()),name:n.value.trim(),mobile:m.value.trim(),balance:0,tx:[]});
  n.value="";m.value="";
  save();
 draw();
@@ -108,7 +113,7 @@ function draw(){
  list.innerHTML="";
  const k=q.value.toLowerCase();
  const rows=db.filter(x=>x.name.toLowerCase().includes(k)||x.mobile.includes(k));
- if(!rows.length){list.innerHTML="<div class=\"item\">কোন কাস্টমার নেই</div>";updateStats();return;}
+ if(!rows.length){list.innerHTML="কোন কাস্টমার নেই";return;}
  rows.forEach(c=>{
    let d=document.createElement("div");
    d.className="item";
@@ -151,7 +156,16 @@ function tx(){
 
 বর্তমান ব্যালেন্স: ৳${cur.balance}`;
  }
- cur.tx.push({msg});
+ cur.tx.push({
+ id: crypto.randomUUID?crypto.randomUUID():Date.now().toString(),
+ date:new Date().toISOString(),
+ type:t.value,
+ amount:amt,
+ charge:charge,
+ net:net,
+ balance:cur.balance,
+ msg:msg
+});
  save();draw();historyView();
  window.open("https://wa.me/"+cur.mobile+"?text="+encodeURIComponent(wa),"_blank");
  a.value="";
@@ -163,10 +177,8 @@ function tx(){
 function printLedger(){
  if(!cur){alert('কাস্টমার নির্বাচন করুন');return;}
  const w=window.open('','_blank');
- w.document.write('<!DOCTYPE html><html><head><title>Ledger</title><style>body{font-family:Arial;padding:20px}hr{margin:15px 0}.item{border:1px solid #ddd;padding:8px;margin:8px 0;border-radius:6px}</style></head><body><h2>Ledger Statement</h2>'+profile.innerHTML+'<hr>'+his.innerHTML+'</body></html>');
- w.document.close();
- w.focus();
- setTimeout(()=>w.print(),300);
+ w.document.write('<h2>Ledger Statement</h2>'+profile.innerHTML+'<hr>'+his.innerHTML);
+ w.print();
 }
 
 function clearForm(){
@@ -175,8 +187,6 @@ function clearForm(){
  a.value="";
  cur=null;
  sel.textContent="কাস্টমার নির্বাচন করুন";
- profile.textContent="কাস্টমার নির্বাচন করুন";
- his.innerHTML="";
 }
 
 function editCustomer(){
