@@ -1,14 +1,29 @@
 <!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Customer Ledger PWA</title>
+<title>Customer Ledger v3.4 Fixed</title>
 <style>
-body{font-family:Arial;background:#eef2f7;margin:0;padding:20px}
-.wrap{max-width:900px;margin:auto}.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+body{
+font-family:Arial,sans-serif;
+margin:0;
+padding:24px;
+background:linear-gradient(135deg,#0f172a,#1e3a8a,#06b6d4);
+min-height:100vh;
+color:#1f2937;
+}
+.wrap{max-width:900px;margin:auto}.card{
+background:rgba(255,255,255,.95);
+backdrop-filter:blur(10px);
+padding:18px;
+border-radius:18px;
+margin-bottom:16px;
+box-shadow:0 10px 30px rgba(0,0,0,.15);
+border:1px solid rgba(255,255,255,.4);
+}
 input,select,button{width:100%;padding:10px;margin-top:8px}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-button{background:#0d6efd;color:#fff;border:none;border-radius:6px}.danger{background:#dc3545}
-.item{border:1px solid #ddd;border-radius:6px;padding:10px;margin-top:6px;cursor:pointer}
+button{background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;border:none;border-radius:12px;font-weight:bold;transition:.2s}.danger{background:#dc3545}
+.item{border:1px solid #dbeafe;border-radius:12px;padding:12px;margin-top:8px;cursor:pointer;background:#f8fbff}
 </style></head><body><div class="wrap">
-<div class="card"><h2>Customer Ledger v3.1</h2>
+<div class="card"><h2>💳 Customer Ledger v3.2 Premium UI</h2><p style='margin-top:6px;color:#475569'>Modern Dashboard Preview</p>
 <div class="row">
 <div><b id="totalCustomers">0</b><br><small>কাস্টমার</small></div>
 <div><b id="totalBalance">৳0</b><br><small>মোট ব্যালেন্স</small></div><div><b id="totalCommission">৳0</b><br><small>মোট কমিশন</small></div>
@@ -28,16 +43,17 @@ button{background:#0d6efd;color:#fff;border:none;border-radius:6px}.danger{backg
 <h3>👤 Customer Profile</h3>
 <div id="profile">কাস্টমার নির্বাচন করুন</div>
 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px">
-<button onclick="print()">🖨️ Print</button>
+<button onclick="printLedger()">🖨️ Print</button>
 <button onclick="backupData()">💾 Backup</button>
-<button onclick="restoreData()">📂 Restore</button>
+<button onclick="document.getElementById('restoreFile').click()">📂 Restore</button><input id="restoreFile" type="file" accept=".json" style="display:none" onchange="restoreData(event)">
 <button onclick="alert('Transaction edit/delete will be implemented in the next build.')">📝 Tx Edit/Delete</button>
 </div>
 </div>
 <div class="card"><h3>📒 Ledger Statement</h3><div id="his"></div></div>
 <script>
-let db=JSON.parse(localStorage.getItem("ledger_v2")||"[]"),cur=null;
-const save=()=>localStorage.setItem("ledger_v2",JSON.stringify(db));
+const STORAGE_KEY="customer_ledger_v34";
+let db=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]"),cur=null;
+const save=()=>localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
 
 function updateStats(){
  totalCustomers.textContent=db.length;
@@ -54,8 +70,11 @@ if(document.getElementById("totalCommission"))
 
 function add(){
  if(!n.value.trim()) return alert("নাম দিন");
+ if(m.value.trim() && !/^01\d{9}$/.test(m.value.trim())){
+   return alert("সঠিক মোবাইল নম্বর লিখুন");
+ }
  if(db.some(x=>x.mobile===m.value.trim()&&m.value.trim()!=="")) return alert("এই মোবাইল নম্বর আগে থেকেই আছে");
- db.push({id:Date.now(),name:n.value.trim(),mobile:m.value.trim(),balance:0,tx:[]});
+ db.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString()),name:n.value.trim(),mobile:m.value.trim(),balance:0,tx:[]});
  n.value="";m.value="";
  save();
 draw();
@@ -70,8 +89,21 @@ function backupData(){
  link.click();
 }
 
-function restoreData(){
- alert('Restore feature will be added in the next version.');
+function restoreData(e){
+ const f=e.target.files[0];
+ if(!f) return;
+ const r=new FileReader();
+ r.onload=function(){
+   try{
+     db=JSON.parse(r.result);
+     save();
+     draw();
+     alert('Backup restored successfully');
+   }catch(err){
+     alert('Invalid backup file');
+   }
+ };
+ r.readAsText(f);
 }
 
 
@@ -123,13 +155,30 @@ function tx(){
 
 বর্তমান ব্যালেন্স: ৳${cur.balance}`;
  }
- cur.tx.push({msg});
+ cur.tx.push({
+ id: crypto.randomUUID?crypto.randomUUID():Date.now().toString(),
+ date:new Date().toISOString(),
+ type:t.value,
+ amount:amt,
+ charge:charge,
+ net:net,
+ balance:cur.balance,
+ msg:msg
+});
  save();draw();historyView();
  window.open("https://wa.me/"+cur.mobile+"?text="+encodeURIComponent(wa),"_blank");
  a.value="";
 }
 
 
+
+
+function printLedger(){
+ if(!cur){alert('কাস্টমার নির্বাচন করুন');return;}
+ const w=window.open('','_blank');
+ w.document.write('<h2>Ledger Statement</h2>'+profile.innerHTML+'<hr>'+his.innerHTML);
+ w.print();
+}
 
 function clearForm(){
  n.value="";
