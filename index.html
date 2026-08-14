@@ -244,13 +244,149 @@ function restoreData(e){
 }
 
 function printLedger(){
- if(!cur)return alert("কাস্টমার নির্বাচন করুন।");
- const w=window.open("","_blank");if(!w)return alert("Popup allow করুন।");
- w.document.write(`<html><head><title>Ledger</title><style>body{font-family:Arial;padding:25px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:8px}</style></head><body>
- <h2>Customer Ledger Statement</h2><p><b>${esc(cur.name)}</b><br>${esc(cur.mobile)}<br>Balance: ৳${cur.balance.toFixed(2)}</p>
- <table><tr><th>Date</th><th>Type</th><th>Amount</th><th>Charge</th><th>Balance</th></tr>
- ${cur.tx.map(t=>`<tr><td>${new Date(t.date).toLocaleString("bn-BD")}</td><td>${t.type}</td><td>৳${t.amount}</td><td>৳${t.charge}</td><td>৳${t.balance}</td></tr>`).join("")}</table></body></html>`);
- w.document.close();w.onload=()=>w.print();
+    if(!cur){
+        alert("কাস্টমার নির্বাচন করুন।");
+        return;
+    }
+
+    const w=window.open("","_blank");
+    if(!w){
+        alert("Popup blocked. Browser থেকে popup allow করুন।");
+        return;
+    }
+
+    const rows=cur.tx.map(t=>`
+        <div class="tx">
+            <div class="line"><span>${t.type==="receive"?"গ্রহণ":"প্রদান"}</span><b>৳${Number(t.amount).toFixed(2)}</b></div>
+            <div class="muted">${new Date(t.date).toLocaleString("bn-BD")}</div>
+            <div class="line"><span>চার্জ</span><span>৳${Number(t.charge||0).toFixed(2)}</span></div>
+            <div class="line"><span>ব্যালেন্স</span><b>৳${Number(t.balance||0).toFixed(2)}</b></div>
+        </div>
+    `).join("");
+
+    w.document.write(`
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>Receipt - ${esc(cur.name)}</title>
+<style>
+@page{
+    size:58mm auto;
+    margin:0;
+}
+*{box-sizing:border-box}
+html,body{
+    margin:0;
+    padding:0;
+    width:58mm;
+    background:#fff;
+}
+body{
+    font-family:Arial,"Noto Sans Bengali",sans-serif;
+    font-size:11px;
+    color:#000;
+    padding:3mm;
+}
+.receipt{
+    width:52mm;
+    margin:0 auto;
+}
+.center{text-align:center}
+.shop{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:2px;
+}
+.title{
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:6px;
+}
+.line{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    margin:2px 0;
+}
+.hr{
+    border-top:1px dashed #000;
+    margin:6px 0;
+}
+.customer{
+    line-height:1.5;
+}
+.tx{
+    padding:5px 0;
+    border-bottom:1px dashed #999;
+}
+.muted{
+    font-size:9px;
+    color:#333;
+    margin:2px 0 3px;
+}
+.total{
+    font-size:14px;
+    font-weight:700;
+    margin:6px 0;
+}
+.footer{
+    text-align:center;
+    font-size:9px;
+    margin-top:8px;
+    line-height:1.5;
+}
+.no-print{
+    margin-top:10px;
+    width:100%;
+    padding:7px;
+    border:1px solid #000;
+    background:#fff;
+}
+@media print{
+    .no-print{display:none}
+}
+</style>
+</head>
+<body>
+<div class="receipt">
+
+    <div class="center">
+        <div class="shop">Rubaiya Pharmacy</div>
+        <div class="title">CUSTOMER LEDGER</div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="customer">
+        <b>কাস্টমার:</b> ${esc(cur.name)}<br>
+        <b>মোবাইল:</b> ${esc(cur.mobile||"N/A")}
+    </div>
+
+    <div class="hr"></div>
+
+    ${rows || '<div class="center">কোন লেনদেন নেই</div>'}
+
+    <div class="hr"></div>
+
+    <div class="line total">
+        <span>বর্তমান ব্যালেন্স</span>
+        <span>৳${Number(cur.balance).toFixed(2)}</span>
+    </div>
+
+    <div class="footer">
+        ধন্যবাদ ❤️<br>
+        আপনার লেনদেনের জন্য কৃতজ্ঞ
+    </div>
+
+    <button class="no-print" onclick="window.print()">🖨️ Print</button>
+
+</div>
+</body>
+</html>`);
+
+    w.document.close();
+    w.focus();
 }
 
 load();draw();
