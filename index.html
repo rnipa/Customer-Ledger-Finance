@@ -68,11 +68,15 @@ if(document.getElementById("totalCommission"))
  totalCommission.textContent="৳"+com.toFixed(2);
 }
 
-function add(){
- if(!n.value.trim()) return alert("নাম দিন");
- if(m.value.trim() && !/^01\d{9}$/.test(m.value.trim())){
-   return alert("সঠিক মোবাইল নম্বর লিখুন");
- }
+const mobile = m.value.trim().replace(/\s+/g, "");
+
+if (
+    mobile &&
+    !/^(?:\+8801|8801|01)\d{9}$/.test(mobile)
+){
+    alert("সঠিক মোবাইল নম্বর লিখুন");
+    return;
+}
  if(db.some(x=>x.mobile===m.value.trim()&&m.value.trim()!=="")) return alert("এই মোবাইল নম্বর আগে থেকেই আছে");
  db.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString()),name:n.value.trim(),mobile:m.value.trim(),balance:0,tx:[]});
  n.value="";m.value="";
@@ -166,9 +170,15 @@ function tx(){
  msg:msg
 });
  save();draw();historyView();
- window.open("https://wa.me/"+cur.mobile+"?text="+encodeURIComponent(wa),"_blank");
- a.value="";
-}
+let waNumber = cur.mobile
+    .replace("+","")
+    .replace(/^01/,"8801");
+
+window.open(
+    "https://wa.me/"+waNumber+
+    "?text="+encodeURIComponent(wa),
+    "_blank"
+);
 
 
 
