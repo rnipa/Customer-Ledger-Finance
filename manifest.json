@@ -1,0 +1,12 @@
+{
+  "name": "Rubaiya Customer Ledger",
+  "short_name": "Customer Ledger",
+  "description": "Customer Ledger, transaction and receipt management PWA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#070b16",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "lang": "bn-BD"
+}
