@@ -281,7 +281,7 @@ function recalc(){
  cur.tx.forEach(t=>{
   const rate=Math.max(0,Number(t.rate??fallbackRate));
   if(t.type==="receive"){
-   t.charge=Number(t.amount)*rate/1000;
+   t.charge=Number((Number(t.amount)*rate/1000).toFixed(2));
    t.net=Number(t.amount)-t.charge;
    balance+=t.net;
   }else{
