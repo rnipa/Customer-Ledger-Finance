@@ -141,6 +141,7 @@ function load(){
       t.balance=Number(t.balance)||0;
     });
   });
+  db.forEach(c=>recalcCustomer(c));
   save();
  }catch(e){
   console.error(e);
@@ -229,12 +230,12 @@ function tx(){
  if(!amount||amount<=0)return alert("সঠিক টাকার পরিমাণ লিখুন।");
 
  const type=$("t").value;
- const rate=Math.max(0,Number($("r").value)||0);
- let charge=type==="receive"?Math.floor(amount/1000)*rate:0;
+ const rate=5;
+ let charge=type==="receive"?Number((amount*rate/1000).toFixed(2)):0;
  let net=type==="receive"?amount-charge:amount;
 
- if(type==="receive")cur.balance+=net;
- else cur.balance-=amount;
+ if(type==="receive")cur.balance=Number((cur.balance+net).toFixed(2));
+ else cur.balance=Number((cur.balance-amount).toFixed(2));
 
  const t={id:uid(),date:new Date().toISOString(),type,amount,charge,net,balance:cur.balance,rate};
  cur.tx.push(t);
@@ -247,7 +248,9 @@ function tx(){
   const msg=type==="receive"
    ? `🏪 Rubaiya Pharmacy\n\nপ্রিয় ${cur.name},\n\nআপনার থেকে গ্রহণ: ৳${amount.toFixed(2)}\nসার্ভিস চার্জ: ৳${charge.toFixed(2)}\nব্যালেন্সে যোগ: ৳${net.toFixed(2)}\n\nবর্তমান ব্যালেন্স: ৳${cur.balance.toFixed(2)}`
    : `🏪 Rubaiya Pharmacy\n\nপ্রিয় ${cur.name},\n\nআপনাকে প্রদান করা হয়েছে: ৳${amount.toFixed(2)}\n\nসার্ভিস চার্জ: ৳0.00\nবর্তমান ব্যালেন্স: ৳${cur.balance.toFixed(2)}`;
-  window.open("https://wa.me/"+number+"?text="+encodeURIComponent(msg),"_blank");
+  if(/^8801\d{9}$/.test(number)){
+   window.open("https://wa.me/"+number+"?text="+encodeURIComponent(msg),"_blank");
+  }
  }
 }
 
@@ -274,24 +277,29 @@ function deleteTx(id){
  recalc();save();draw();selectCustomer(cur.id);
 }
 
-function recalc(){
+function recalcCustomer(c){
  let balance=0;
- const fallbackRate=5;
- cur.tx.sort((a,b)=>new Date(a.date)-new Date(b.date));
- cur.tx.forEach(t=>{
-  const rate=Math.max(0,Number(t.rate??fallbackRate));
+ c.tx.sort((a,b)=>new Date(a.date)-new Date(b.date));
+ c.tx.forEach(t=>{
+  t.amount=Number(t.amount)||0;
+  t.rate=t.type==="receive"?5:0;
   if(t.type==="receive"){
-   t.charge=Number((Number(t.amount)*rate/1000).toFixed(2));
-   t.net=Number(t.amount)-t.charge;
-   balance+=t.net;
+   t.charge=Number((t.amount*5/1000).toFixed(2));
+   t.net=Number((t.amount-t.charge).toFixed(2));
+   balance=Number((balance+t.net).toFixed(2));
   }else{
    t.charge=0;
-   t.net=Number(t.amount);
-   balance-=t.amount;
+   t.net=Number(t.amount.toFixed(2));
+   balance=Number((balance-t.amount).toFixed(2));
   }
   t.balance=balance;
  });
- cur.balance=balance;
+ c.balance=balance;
+}
+
+function recalc(){
+ if(!cur)return;
+ recalcCustomer(cur);
 }
 
 function editCustomer(){
