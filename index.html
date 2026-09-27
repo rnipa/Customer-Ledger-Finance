@@ -75,7 +75,6 @@ button.danger{background:linear-gradient(135deg,#ff416c,#ff4b2b)}
 @media(max-width:360px){.row{grid-template-columns:1fr}}
 </style>
 
-</head>
 </head><body>
 <button id="installAppBtn" type="button">📲 মোবাইলে App Install করুন</button>
 <div class="wrap">
@@ -92,7 +91,7 @@ button.danger{background:linear-gradient(135deg,#ff416c,#ff4b2b)}
 <div id="sel">কাস্টমার নির্বাচন করুন</div>
 <select id="t"><option value="receive">গ্রহণ</option><option value="withdraw">প্রদান</option></select>
 <input id="a" type="number" placeholder="টাকার পরিমাণ">
-<input id="r" type="number" value="5" placeholder="প্রতি ১০০০ চার্জ">
+<input id="r" type="number" value="5" readonly placeholder="প্রতি ১০০০ টাকায় চার্জ (৳৫)">
 <div class="row"><button onclick="tx()">সংরক্ষণ</button><button onclick="editCustomer()">এডিট</button></div><div class="row"><button onclick="clearForm()">ফর্ম ক্লিয়ার</button><button class="danger" onclick="del()">ডিলিট</button></div>
 </div>
 <div class="card">
@@ -263,7 +262,7 @@ function editTx(id){
 
  t.amount=amount;
  t.type=type;
- if(type==="receive") t.rate=Math.max(0,Number($("r").value)||5);
+ if(type==="receive") t.rate=5;
  else t.rate=0;
  recalc();
  save();draw();selectCustomer(cur.id);
@@ -277,12 +276,12 @@ function deleteTx(id){
 
 function recalc(){
  let balance=0;
- const fallbackRate=Math.max(0,Number($("r").value)||5);
+ const fallbackRate=5;
  cur.tx.sort((a,b)=>new Date(a.date)-new Date(b.date));
  cur.tx.forEach(t=>{
   const rate=Math.max(0,Number(t.rate??fallbackRate));
   if(t.type==="receive"){
-   t.charge=Math.floor(Number(t.amount)/1000)*rate;
+   t.charge=Number(t.amount)*rate/1000;
    t.net=Number(t.amount)-t.charge;
    balance+=t.net;
   }else{
